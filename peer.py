@@ -56,14 +56,12 @@ class TCPServer (threading.Thread):
 
         
 if (len(sys.argv) < 4 or len(sys.argv) == 5 or len(sys.argv) > 6):
-    print "incorrect number of argv"
-    sys.exit("Error message")
+    sys.exit("incorrect number of argv")
 elif (len(sys.argv) == 4):
     print "First peer"
 elif (len(sys.argv) == 6):
     print "Peer"
 else:
-    print "Error"
     sys.exit("Error message")
 
 peername = str(sys.argv[1])
