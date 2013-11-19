@@ -87,50 +87,50 @@ def runUDPClient(str, udp):
 	return modifiedMesg
 
 #Main Thread
-counter=0
-tcpPort=12000
-udpPort=13000
+#counter=0
+#tcpPort=12000
+#udpPort=13000
 
 # Create new threads
-thread1 = TCPServer(1,tcpPort)
-thread2 = UDPServer(2,udpPort)
+#thread1 = TCPServer(1,tcpPort)
+#thread2 = UDPServer(2,udpPort)
 
 
 # Start new Threads
-thread1.start()
-thread2.start()
+#thread1.start()
+#thread2.start()
 
-choice =""
-while choice !="Q":
-	choice = raw_input("Choose an option-->[S]tatus, [E]cho, [U]ppercase, [R]everse, [Q]uit: ")
-	if (choice=="S"):
-		print "\tTCP server has served",thread1.counter,"clients"
-		print "\tUDP server has served",thread2.counter,"clients"
-		print "\tMain Thread has served",counter,"clients"
-	if (choice=="E"):
-		str = raw_input("\tEnter a string to be echoed: ");
-		counter += 1
-		print "\tEchoed string is ",str
-	if (choice=="U"):
-		str = raw_input("\tEnter a string to be made uppercase: ");
-		mesg = runUDPClient(str,udpPort)
-		print "\tUppercase string is ",mesg
-	if (choice=="R"):
-		str = raw_input("\tEnter a string to be reversed: ");
-		mesg = runTCPClient(str,tcpPort)
-		print "\tReversed string is ",mesg
+#choice =""
+#while choice !="Q":
+#	choice = raw_input("Choose an option-->[S]tatus, [E]cho, [U]ppercase, [R]everse, [Q]uit: ")
+#	if (choice=="S"):
+#		print "\tTCP server has served",thread1.counter,"clients"
+#		print "\tUDP server has served",thread2.counter,"clients"
+#		print "\tMain Thread has served",counter,"clients"
+#	if (choice=="E"):
+#		str = raw_input("\tEnter a string to be echoed: ");
+#		counter += 1
+#		print "\tEchoed string is ",str
+#	if (choice=="U"):
+#		str = raw_input("\tEnter a string to be made uppercase: ");
+#		mesg = runUDPClient(str,udpPort)
+#		print "\tUppercase string is ",mesg
+#	if (choice=="R"):
+#		str = raw_input("\tEnter a string to be reversed: ");
+#		mesg = runTCPClient(str,tcpPort)
+#		print "\tReversed string is ",mesg
 
 
 #Send stop message to threads	
-thread1.done=True
-thread2.done=True
+#thread1.done=True
+#thread2.done=True
 
 #if blocking in thread1 and thread2, you can send "pings" from here to both those ports to force them out of blocking and check the loop condition
-runTCPClient("quit",tcpPort)
-runUDPClient("quit",udpPort)
+#runTCPClient("quit",tcpPort)
+#runUDPClient("quit",udpPort)
 
-print "Waiting for all threads to complete"
-thread1.join()
-thread2.join()
+#print "Waiting for all threads to complete"
+#thread1.join()
+#thread2.join()
 
-print "Exiting Main Thread"
+#print "Exiting Main Thread"
