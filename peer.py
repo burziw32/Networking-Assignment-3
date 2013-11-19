@@ -9,17 +9,17 @@ from socket import *
 import threading
 
 class UDPServer (threading.Thread):
-    def __init__(self, threadID,serverPort):
+    def __init__(self, threadID,lookupPort):
         threading.Thread.__init__(self)
         self.threadID = threadID
-        self.serverPort = serverPort
+        self.lookupPort = lookupPort
         self.counter = 0
         self.done = False
         
     def run(self):
         print "Starting UDP server thread"
 	serverSocket = socket(AF_INET,SOCK_DGRAM)
-	serverSocket.bind(('',self.serverPort))
+	serverSocket.bind(('',self.lookupPort))
 	print "The UDP server is ready to receive"
 	while not(self.done):
 		mesg, clientAddress = serverSocket.recvfrom(2048)
@@ -31,10 +31,10 @@ class UDPServer (threading.Thread):
 
 
 class TCPServer (threading.Thread):
-    def __init__(self, threadID,serverPort):
+    def __init__(self, threadID,fileTransferPort):
         threading.Thread.__init__(self)
         self.threadID = threadID
-        self.serverPort = serverPort
+        self.fileTransferPort = fileTransferPort
         self.counter = 0
         self.done = False
         
