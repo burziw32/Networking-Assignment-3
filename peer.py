@@ -30,7 +30,7 @@ class lookupPort (threading.Thread):
         print "Exiting UDP server thread"
 
 
-class transferPort (threading.Thread):
+class fileTransferPort (threading.Thread):
     def __init__(self, threadID,serverPort):
         threading.Thread.__init__(self)
         self.threadID = threadID
@@ -92,7 +92,7 @@ def runUDPClient(str, udp):
 #udpPort=13000
 
 # Create new threads
-#thread1 = transferPort(1,tcpPort)
+#thread1 = fileTransferPort(1,tcpPort)
 #thread2 = lookupPort(2,udpPort)
 
 
