@@ -1,5 +1,3 @@
-WALTER BURZIK IS MY PARTNER.
+This a is a peer to peer application called peer.
 
-BUT NOT IN A GAY WAY
-
--MEATS BY GAY
+Authored by: Walter Burzik and Jason Blackwell
