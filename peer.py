@@ -8,7 +8,7 @@ import os, sys
 from socket import *
 import threading
 
-class lookupPort (threading.Thread):
+class UDPServer (threading.Thread):
     def __init__(self, threadID,serverPort):
         threading.Thread.__init__(self)
         self.threadID = threadID
@@ -30,7 +30,7 @@ class lookupPort (threading.Thread):
         print "Exiting UDP server thread"
 
 
-class fileTransferPort (threading.Thread):
+class TCPServer (threading.Thread):
     def __init__(self, threadID,serverPort):
         threading.Thread.__init__(self)
         self.threadID = threadID
@@ -92,8 +92,8 @@ def runUDPClient(str, udp):
 #udpPort=13000
 
 # Create new threads
-#thread1 = fileTransferPort(1,tcpPort)
-#thread2 = lookupPort(2,udpPort)
+#thread1 = TCPServer(1,tcpPort)
+#thread2 = UDPServer(2,udpPort)
 
 
 # Start new Threads
