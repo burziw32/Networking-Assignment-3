@@ -41,7 +41,7 @@ class TCPServer (threading.Thread):
     def run(self):
         print "Starting TCP server thread"
 	serverSocket = socket(AF_INET,SOCK_STREAM)
-	serverSocket.bind(('',self.serverPort))
+	serverSocket.bind(('',self.fileTransferPort))
 	serverSocket.listen(5)
 	print "The TCP server is ready to receive"
 	while not(self.done):
