@@ -55,22 +55,32 @@ class TCPServer (threading.Thread):
         print "Exiting TCP server thread"
 
         
-if (len(sys.argv) < 4 or len(sys.argv) == 5 or len(sys.argv) > 6):
-    sys.exit("incorrect number of argv")
-elif (len(sys.argv) == 4):
+if (len(sys.argv) < 5 or len(sys.argv) == 6 or len(sys.argv) > 7):
+    sys.exit("incorrect number of args \n peer.py [PEER NAME] [MY IP] [MY PORT] [PATH TO DIRECTORY] [optional PEER IP] [optional PEER PORT]")
+elif (len(sys.argv) == 5):
     print "First peer"
-elif (len(sys.argv) == 6):
+elif (len(sys.argv) == 7):
     print "Peer"
 else:
     sys.exit("Error message")
 
-peername = str(sys.argv[1])
-myIP = str(sys.argv[2])
-myPort = str(sys.argv[3])
-pathToDirectory = str(sys.argv[4])
-peerIP = str(sys.argv[5])
-peerPort = str(sys.argv[6])
+peername = sys.argv[1]
+myIP = sys.argv[2]
+myPort = sys.argv[3]
+pathToDirectory = sys.argv[4]
+# peerIP = sys.argv[5]
+# peerPort = sys.argv[6]
 
+print "Peer Name: " + peername
+print "My IP: " + myIP
+print "My Port: " + myPort
+print "Directory: " + pathToDirectory
+udpPort = myPort
+tcpPort = int(myPort) + 1 
+print "TCP Port: " + str(tcpPort)
+print "UDP Port: " + udpPort
+# print peerIP
+# print peerPort
 
 def runTCPClient(str,tcp):
 	clientSocket = socket(AF_INET,SOCK_STREAM)
