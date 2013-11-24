@@ -2,7 +2,7 @@
 peer.py
 Jason Blackwell
 Walter Burzik
-11/18/2013
+11/24/2013
 '''
 import os, sys
 from socket import *
@@ -54,6 +54,20 @@ class TCPServer (threading.Thread):
 
         print "Exiting TCP server thread"
 
+def runTCPClient(str,tcp):
+	clientSocket = socket(AF_INET,SOCK_STREAM)
+	clientSocket.connect(("localhost",tcp))
+	clientSocket.send(str)
+	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
+	clientSocket.close()
+	return modifiedMesg
+	
+def runUDPClient(str, udp):
+	clientSocket = socket(AF_INET,SOCK_DGRAM)	
+	clientSocket.sendto(str,("localhost",udp))
+	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
+	return modifiedMesg
+
         
 if (len(sys.argv) < 5 or len(sys.argv) == 6 or len(sys.argv) > 7):
     sys.exit("incorrect number of args \n peer.py [PEER NAME] [MY IP] [MY PORT] [PATH TO DIRECTORY] [optional PEER IP] [optional PEER PORT]")
@@ -77,70 +91,49 @@ print "My Port: " + myPort
 print "Directory: " + pathToDirectory
 udpPort = myPort
 tcpPort = int(myPort) + 1 
-print "TCP Port: " + str(tcpPort)
-print "UDP Port: " + udpPort
+print "TCP Port fileTransferPort: " + str(tcpPort)
+print "UDP Port lookupPort: " + udpPort
 # print peerIP
 # print peerPort
 
-def runTCPClient(str,tcp):
-	clientSocket = socket(AF_INET,SOCK_STREAM)
-	clientSocket.connect(("localhost",tcp))
-	clientSocket.send(str)
-	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
-	clientSocket.close()
-	return modifiedMesg
-	
-def runUDPClient(str, udp):
-	clientSocket = socket(AF_INET,SOCK_DGRAM)	
-	clientSocket.sendto(str,("localhost",udp))
-	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
-	return modifiedMesg
 
-#Main Thread
-#counter=0
-#tcpPort=12000
-#udpPort=13000
+thread1 = TCPServer(1,int(tcpPort))
+thread2 = UDPServer(2,int(udpPort))
 
-# Create new threads
-#thread1 = TCPServer(1,tcpPort)
-#thread2 = UDPServer(2,udpPort)
+thread1.start()
+thread2.start()
 
-
-# Start new Threads
-#thread1.start()
-#thread2.start()
-
-#choice =""
-#while choice !="Q":
-#	choice = raw_input("Choose an option-->[S]tatus, [E]cho, [U]ppercase, [R]everse, [Q]uit: ")
-#	if (choice=="S"):
-#		print "\tTCP server has served",thread1.counter,"clients"
-#		print "\tUDP server has served",thread2.counter,"clients"
-#		print "\tMain Thread has served",counter,"clients"
-#	if (choice=="E"):
-#		str = raw_input("\tEnter a string to be echoed: ");
-#		counter += 1
-#		print "\tEchoed string is ",str
-#	if (choice=="U"):
-#		str = raw_input("\tEnter a string to be made uppercase: ");
-#		mesg = runUDPClient(str,udpPort)
-#		print "\tUppercase string is ",mesg
-#	if (choice=="R"):
-#		str = raw_input("\tEnter a string to be reversed: ");
-#		mesg = runTCPClient(str,tcpPort)
-#		print "\tReversed string is ",mesg
+choice =""
+while choice !="Q":
+	choice = raw_input("Available Commands:, status, find <filename>, get <filename> <target-peer-ip> <target-file-transfer-port>, quit " + '\n >')
+	if ("status" in choice):
+		print "\tTCP server has served",thread1.counter,"clients"
+		print "\tUDP server has served",thread2.counter,"clients"
+		print "\tMain Thread has served",counter,"clients"
+	if ("find" in choice):
+		str = raw_input("\tlooking for");
+		counter += 1
+		print "\tEchoed string is ",str
+	if (choice=="U"):
+		str = raw_input("\tEnter a string to be made uppercase: ");
+		mesg = runUDPClient(str,udpPort)
+		print "\tUppercase string is ",mesg
+	if (choice=="R"):	
+		str = raw_input("\tEnter a string to be reversed: ");
+		mesg = runTCPClient(str,tcpPort)
+		print "\tReversed string is ",mesg
 
 
 #Send stop message to threads	
-#thread1.done=True
-#thread2.done=True
+thread1.done=True
+thread2.done=True
 
 #if blocking in thread1 and thread2, you can send "pings" from here to both those ports to force them out of blocking and check the loop condition
-#runTCPClient("quit",tcpPort)
-#runUDPClient("quit",udpPort)
+runTCPClient("quit",tcpPort)
+runUDPClient("quit",udpPort)
 
-#print "Waiting for all threads to complete"
-#thread1.join()
-#thread2.join()
+print "Waiting for all threads to complete"
+thread1.join()
+thread2.join()
 
-#print "Exiting Main Thread"
+print "Exiting Main Thread"
