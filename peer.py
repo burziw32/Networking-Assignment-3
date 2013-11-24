@@ -24,8 +24,12 @@ class UDPServer (threading.Thread):
 	print "The UDP server is ready to receive"
 	while not(self.done):
 		mesg, clientAddress = serverSocket.recvfrom(2048)
-		self.counter +=1
-		modifiedMesg = mesg.upper()
+		print "Request"
+		if "add" in mesg:
+			print "Peer Requesting Add"
+			print clientAddress
+			print mesg
+		modifedMesg = "accept"
 		serverSocket.sendto(modifiedMesg,clientAddress)
 
         print "Exiting UDP server thread"
@@ -62,6 +66,14 @@ def runTCPClient(str,tcp):
 	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
 	clientSocket.close()
 	return modifiedMesg
+
+def openTCPClient(str,tcp):
+	clientSocket = socket(AF_INET,SOCK_STREAM)
+	clientSocket.connect(("localhost",tcp))
+	clientSocket.send(str)
+	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
+	clientSocket.close()
+	return modifiedMesg
 	
 def runUDPClient(str, udp):
 	clientSocket = socket(AF_INET,SOCK_DGRAM)	
@@ -69,23 +81,38 @@ def runUDPClient(str, udp):
 	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
 	return modifiedMesg
 
+def openUDPClient(str, adr, udp):
+	clientSocket = socket(AF_INET,SOCK_DGRAM)	
+	clientSocket.sendto(str,(adr,udp))
+	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
+	return modifiedMesg
+
+neighbors = []
         
 if (len(sys.argv) < 5 or len(sys.argv) == 6 or len(sys.argv) > 7):
     sys.exit("incorrect number of args \n peer.py [PEER NAME] [MY IP] [MY PORT] [PATH TO DIRECTORY] [optional PEER IP] [optional PEER PORT]")
 elif (len(sys.argv) == 5):
-    print "First peer"
+	print "First peer"
+	peername = sys.argv[1]
+	myIP = sys.argv[2]
+	myPort = sys.argv[3]
+	pathToDirectory = sys.argv[4]
+	peerIP = ""
+	peerPort = ""
 elif (len(sys.argv) == 7):
-    print "Peer"
+	print "Peer"
+	peername = sys.argv[1]
+	myIP = sys.argv[2]
+	myPort = sys.argv[3]
+	pathToDirectory = sys.argv[4]
+	peerIP = sys.argv[5]
+	peerPort = sys.argv[6]
+	neighbors.append(str(peerIP))
+	neighbors.append(str(peerPort))
 else:
     sys.exit("Error message")
 
-peername = sys.argv[1]
-myIP = sys.argv[2]
-myPort = sys.argv[3]
-pathToDirectory = sys.argv[4]
-# peerIP = sys.argv[5]
-# peerPort = sys.argv[6]
-neighbors = []
+
 files = []
 try:
 	for (dirpath, dirnames, filenames) in walk(pathToDirectory):
@@ -102,21 +129,22 @@ udpPort = myPort
 tcpPort = int(myPort) + 1 
 print "TCP Port fileTransferPort: " + str(tcpPort)
 print "UDP Port lookupPort: " + udpPort
-# print peerIP
-# print peerPort
-
+print peerIP
+print peerPort
 
 # thread1 = TCPServer(1,int(tcpPort))
-# thread2 = UDPServer(2,int(udpPort))
+thread2 = UDPServer(2,int(udpPort))
 
 # thread1.start()
-# thread2.start()
+thread2.start()
+
+print openUDPClient("add" + myIP + " " + myPort, str(peerIP) , int(peerPort))
 
 choice =""
 while choice !="quit":
 	choice = raw_input('\n' + "Available Commands:, status, find <filename>, get <filename> <target-peer-ip> <target-file-transfer-port>, quit " + '\n\n>')
 	if ("status" in choice):
-		print "Neighbors: " + neighbors
+		print "Neighbors: " + str(neighbors)
 		files = []
 		try:
 			for (dirpath, dirnames, filenames) in walk(pathToDirectory):
@@ -124,7 +152,7 @@ while choice !="quit":
 				break
 		except:
 			print "Invalid Directory"
-		print "Files: " + files
+		print "Files: " + str(files)
 	if ("find" in choice):
 		try:
 			start = choice.index(' ')
@@ -143,14 +171,15 @@ while choice !="quit":
 
 #Send stop message to threads	
 # thread1.done=True
-# thread2.done=True
+thread2.done=True
 
+udpPort = 42000
 # #if blocking in thread1 and thread2, you can send "pings" from here to both those ports to force them out of blocking and check the loop condition
 # runTCPClient("quit",tcpPort)
-# runUDPClient("quit",udpPort)
+runUDPClient("quit",udpPort)
 
 print "Waiting for all threads to complete"
 # thread1.join()
-# thread2.join()
+thread2.join()
 
 print "Exiting Main Thread"
