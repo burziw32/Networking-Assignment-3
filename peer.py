@@ -7,6 +7,7 @@ Walter Burzik
 import os, sys
 from socket import *
 import threading
+from os import walk
 
 class UDPServer (threading.Thread):
     def __init__(self, threadID,lookupPort):
@@ -84,6 +85,8 @@ myPort = sys.argv[3]
 pathToDirectory = sys.argv[4]
 # peerIP = sys.argv[5]
 # peerPort = sys.argv[6]
+neighbors = []
+files = []
 
 print "Peer Name: " + peername
 print "My IP: " + myIP
@@ -97,23 +100,24 @@ print "UDP Port lookupPort: " + udpPort
 # print peerPort
 
 
-thread1 = TCPServer(1,int(tcpPort))
-thread2 = UDPServer(2,int(udpPort))
+# thread1 = TCPServer(1,int(tcpPort))
+# thread2 = UDPServer(2,int(udpPort))
 
-thread1.start()
-thread2.start()
+# thread1.start()
+# thread2.start()
 
 choice =""
-while choice !="Q":
-	choice = raw_input("Available Commands:, status, find <filename>, get <filename> <target-peer-ip> <target-file-transfer-port>, quit " + '\n >')
+while choice !="quit":
+	choice = raw_input('\n' + "Available Commands:, status, find <filename>, get <filename> <target-peer-ip> <target-file-transfer-port>, quit " + '\n\n>')
 	if ("status" in choice):
-		print "\tTCP server has served",thread1.counter,"clients"
-		print "\tUDP server has served",thread2.counter,"clients"
-		print "\tMain Thread has served",counter,"clients"
+		print "Here is where I would put my neighbors if I had any"
+		print "Here is where I am going to put my files.
 	if ("find" in choice):
-		str = raw_input("\tlooking for");
-		counter += 1
-		print "\tEchoed string is ",str
+		try:
+			start = choice.index(' ')
+			print "finding " + choice[start + 1:]
+		except:
+			print "incorrect argument"
 	if (choice=="U"):
 		str = raw_input("\tEnter a string to be made uppercase: ");
 		mesg = runUDPClient(str,udpPort)
@@ -125,15 +129,15 @@ while choice !="Q":
 
 
 #Send stop message to threads	
-thread1.done=True
-thread2.done=True
+# thread1.done=True
+# thread2.done=True
 
-#if blocking in thread1 and thread2, you can send "pings" from here to both those ports to force them out of blocking and check the loop condition
-runTCPClient("quit",tcpPort)
-runUDPClient("quit",udpPort)
+# #if blocking in thread1 and thread2, you can send "pings" from here to both those ports to force them out of blocking and check the loop condition
+# runTCPClient("quit",tcpPort)
+# runUDPClient("quit",udpPort)
 
 print "Waiting for all threads to complete"
-thread1.join()
-thread2.join()
+# thread1.join()
+# thread2.join()
 
 print "Exiting Main Thread"
