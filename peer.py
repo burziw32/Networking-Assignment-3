@@ -87,6 +87,12 @@ pathToDirectory = sys.argv[4]
 # peerPort = sys.argv[6]
 neighbors = []
 files = []
+try:
+	for (dirpath, dirnames, filenames) in walk(pathToDirectory):
+		files.extend(filenames)
+		break
+except:
+		print "Invalid Directory"
 
 print "Peer Name: " + peername
 print "My IP: " + myIP
@@ -110,8 +116,15 @@ choice =""
 while choice !="quit":
 	choice = raw_input('\n' + "Available Commands:, status, find <filename>, get <filename> <target-peer-ip> <target-file-transfer-port>, quit " + '\n\n>')
 	if ("status" in choice):
-		print "Here is where I would put my neighbors if I had any"
-		print "Here is where I am going to put my files.
+		print "Neighbors: " + neighbors
+		files = []
+		try:
+			for (dirpath, dirnames, filenames) in walk(pathToDirectory):
+				files.extend(filenames)
+				break
+		except:
+			print "Invalid Directory"
+		print "Files: " + files
 	if ("find" in choice):
 		try:
 			start = choice.index(' ')
