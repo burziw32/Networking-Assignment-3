@@ -54,7 +54,8 @@ class UDPServer (threading.Thread):
 				seqNbr += 1
 		if "found" in mesg:
 			print mesg
-        print "Exiting UDP server thread"
+
+		print "Exiting UDP server thread"
 
 class TCPServer (threading.Thread):
     def __init__(self, threadID,fileTransferPort):
@@ -72,30 +73,37 @@ class TCPServer (threading.Thread):
 	print "The TCP server is ready to receive"
 	while not(self.done):
 		connectionSocket,addr = serverSocket.accept()
+		connectionSocket.settimeout(5)
 		mesg = connectionSocket.recv(2048)
-		print "Get Request"
-		print mesg
-		print addr
-		arg = mesg.split()
+		if "get" in mesg:
+			print "Get Request"
+			print mesg
+			print addr
+			arg = mesg.split()
+			flName = ""
+			try:
+				flName = arg[1]
+				print pathToDirectory + flName
+				sendfile = open(pathToDirectory + flName, 'rb')
+				data = sendfile.read()
+				connectionSocket.send(data) 
+				connectionSocket.close() 
+				sendfile.close()
+			except:
+				print "bad request"
+		    	break
+	    	print "file sent"
 		try:
-			flName = arg[1]
+			connectionSocket.close() 
 		except:
-			print "bad request"
-	    	break
-		sendfile = open(pathToDirectory + flName, 'rb')
-  		data = sendfile.read()
-    	#connectionSocket.send(encode_length(len(data)) # Send the length as a fixed size message
-    	connectionSocket.send(data)
-    	# Get Acknowledgement
-    	connectionSocket.recv(1) # Just 1 byte   
-    	print "file " + flName + " sent"
-        print "Exiting TCP server thread"
+			print "closing"
+
+		print "Exiting TCP server thread"
 
 def runTCPClient(str,tcp):
 	clientSocket = socket(AF_INET,SOCK_STREAM)
 	clientSocket.connect(("localhost",tcp))
 	clientSocket.send(str)
-	modifiedMesg = ""
 	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
 	clientSocket.close()
 	return modifiedMesg
@@ -108,19 +116,20 @@ def openTCPClient(str, adr, tcp, filename):
     # Recieve the file from the client
 	writefile = open(pathToDirectory + filename, 'wb')
     #length = decode_length(clientSocket.read(LENGTH_SIZE) # Read a fixed length integer, 2 or 4 bytes
-	while (length):
-		rec = clientSocket.recv(1024)
-		writefile.write(rec)
-		length -= sizeof(rec)
-	self.con.send(b'A') # single character A to prevent issues with buffering
+	#while (length):
+	rec = clientSocket.recv(102400)
+	print rec
+	writefile.write(rec)
+	#clientSocket.send(b'A') # single character A to prevent issues with buffering
 	clientSocket.close()
 	writefile.close()
-	return modifiedMesg
+	return "file read"
 	
 def runUDPClient(str, udp):
 	clientSocket = socket(AF_INET,SOCK_DGRAM)	
 	clientSocket.sendto(str,("localhost",udp))
 	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
+	clientSocket.close()
 	return modifiedMesg
 
 def openUDPClient(str, adr, udp):
@@ -217,9 +226,9 @@ while choice !="quit":
 	if ("get" in choice):
 		args = choice.split()
 		try:
-			name = args[2]
-			targIP = args[3]
-			targPort = args[4]
+			name = args[1]
+			targIP = args[2]
+			targPort = args[3]
 		except:
 			print "incorrect args"
 			break
@@ -232,8 +241,8 @@ thread1.done=True
 thread2.done=True
 
 # #if blocking in thread1 and thread2, you can send "pings" from here to both those ports to force them out of blocking and check the loop condition
-runTCPClient("qui",int(tcpPort))
-runUDPClient("qui",int(udpPort))
+runTCPClient("quit",int(tcpPort))
+runUDPClient("quit",int(udpPort))
 print "Waiting for all threads to complete"
 thread1.join()
 thread2.join()
