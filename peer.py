@@ -7,6 +7,7 @@ Walter Burzik
 import os, sys
 from socket import *
 import threading
+import select
 from os import walk
 
 class UDPServer (threading.Thread):
@@ -29,11 +30,31 @@ class UDPServer (threading.Thread):
 			print "Peer Requesting Add"
 			print clientAddress
 			print mesg
-		modifedMesg = "accept"
-		serverSocket.sendto(modifiedMesg,clientAddress)
-
+			newPeer = mesg.split()
+			neighbors.append(newPeer[1])
+			neighbors.append(newPeer[2])
+			neighbors.append(newPeer[3])
+			modifiedMesg = "accept"
+			serverSocket.sendto(modifiedMesg,clientAddress)
+		if "find" in mesg:
+			print "Peer Requesting Find"
+			print clientAddress
+			print mesg
+			daMessage = mesg.split()
+			daFile = daMessage[1]
+			daPeerIP = daMessage[3]
+			daPeerPort = daMessage[4]
+			print "finding: " + daFile
+			if daFile in files:
+				print "you have the file: " + daFile
+				openUDPClient("found " + daFile + " " + myIP + " " + str(tcpPort), daPeerIP, int(daPeerPort))
+			else:
+				for counter in xrange(0,len(neighbors),3):
+					print openUDPClient("find " + daFile + " " + peername + " "+ daPeerIP + " " + str(daPeerPort) + " " + str(seqNbr), neighbors[1], int(neighbors[2]))
+				seqNbr += 1
+		if "found" in mesg:
+			print mesg
         print "Exiting UDP server thread"
-
 
 class TCPServer (threading.Thread):
     def __init__(self, threadID,fileTransferPort):
@@ -51,28 +72,49 @@ class TCPServer (threading.Thread):
 	print "The TCP server is ready to receive"
 	while not(self.done):
 		connectionSocket,addr = serverSocket.accept()
-		self.counter +=1
-		mesg= connectionSocket.recv(2048)
-		modifiedMesg = mesg[::-1]
-		connectionSocket.send(modifiedMesg)
-		connectionSocket.close()        
-
+		mesg = connectionSocket.recv(2048)
+		print "Get Request"
+		print mesg
+		print addr
+		arg = mesg.split()
+		try:
+			flName = arg[1]
+		except:
+			print "bad request"
+	    	break
+		sendfile = open(pathToDirectory + flName, 'rb')
+  		data = sendfile.read()
+    	#connectionSocket.send(encode_length(len(data)) # Send the length as a fixed size message
+    	connectionSocket.send(data)
+    	# Get Acknowledgement
+    	connectionSocket.recv(1) # Just 1 byte   
+    	print "file " + flName + " sent"
         print "Exiting TCP server thread"
 
 def runTCPClient(str,tcp):
 	clientSocket = socket(AF_INET,SOCK_STREAM)
 	clientSocket.connect(("localhost",tcp))
 	clientSocket.send(str)
+	modifiedMesg = ""
 	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
 	clientSocket.close()
 	return modifiedMesg
 
-def openTCPClient(str,tcp):
+def openTCPClient(str, adr, tcp, filename):
 	clientSocket = socket(AF_INET,SOCK_STREAM)
-	clientSocket.connect(("localhost",tcp))
+	clientSocket.connect((adr,tcp))
 	clientSocket.send(str)
-	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
+	LENGTH_SIZE = 4 # length is a 4 byte int.
+    # Recieve the file from the client
+	writefile = open(pathToDirectory + filename, 'wb')
+    #length = decode_length(clientSocket.read(LENGTH_SIZE) # Read a fixed length integer, 2 or 4 bytes
+	while (length):
+		rec = clientSocket.recv(1024)
+		writefile.write(rec)
+		length -= sizeof(rec)
+	self.con.send(b'A') # single character A to prevent issues with buffering
 	clientSocket.close()
+	writefile.close()
 	return modifiedMesg
 	
 def runUDPClient(str, udp):
@@ -84,10 +126,14 @@ def runUDPClient(str, udp):
 def openUDPClient(str, adr, udp):
 	clientSocket = socket(AF_INET,SOCK_DGRAM)	
 	clientSocket.sendto(str,(adr,udp))
-	modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
+	modifiedMesg = ""
+	ready = select.select([clientSocket], [], [], 5)
+	if ready[0]:
+		modifiedMesg,serverAddress = clientSocket.recvfrom(2048)
 	return modifiedMesg
 
 neighbors = []
+seqNbr = 0
         
 if (len(sys.argv) < 5 or len(sys.argv) == 6 or len(sys.argv) > 7):
     sys.exit("incorrect number of args \n peer.py [PEER NAME] [MY IP] [MY PORT] [PATH TO DIRECTORY] [optional PEER IP] [optional PEER PORT]")
@@ -107,6 +153,7 @@ elif (len(sys.argv) == 7):
 	pathToDirectory = sys.argv[4]
 	peerIP = sys.argv[5]
 	peerPort = sys.argv[6]
+	neighbors.append("neighbor")
 	neighbors.append(str(peerIP))
 	neighbors.append(str(peerPort))
 else:
@@ -132,13 +179,14 @@ print "UDP Port lookupPort: " + udpPort
 print peerIP
 print peerPort
 
-# thread1 = TCPServer(1,int(tcpPort))
+thread1 = TCPServer(1,int(tcpPort))
 thread2 = UDPServer(2,int(udpPort))
 
-# thread1.start()
+thread1.start()
 thread2.start()
 
-print openUDPClient("add" + myIP + " " + myPort, str(peerIP) , int(peerPort))
+if (peerIP != ""):
+	print openUDPClient("add " + peername + " " +  myIP + " " + myPort, str(peerIP) , int(peerPort))
 
 choice =""
 while choice !="quit":
@@ -156,30 +204,38 @@ while choice !="quit":
 	if ("find" in choice):
 		try:
 			start = choice.index(' ')
-			print "finding " + choice[start + 1:]
+			filename = choice[start+1:]
 		except:
 			print "incorrect argument"
-	if (choice=="U"):
-		str = raw_input("\tEnter a string to be made uppercase: ");
-		mesg = runUDPClient(str,udpPort)
-		print "\tUppercase string is ",mesg
-	if (choice=="R"):	
-		str = raw_input("\tEnter a string to be reversed: ");
-		mesg = runTCPClient(str,tcpPort)
-		print "\tReversed string is ",mesg
+		print "finding: " + filename
+		if filename in files:
+			print "you already have the file: " + filename
+		else:
+			for counter in xrange(0,len(neighbors),3):
+				print openUDPClient("find " + filename + " " + peername + " " + myIP + " " + str(myPort) + " " + str(seqNbr), neighbors[counter+1], int(neighbors[counter+2]))
+			seqNbr += 1
+	if ("get" in choice):
+		args = choice.split()
+		try:
+			name = args[2]
+			targIP = args[3]
+			targPort = args[4]
+		except:
+			print "incorrect args"
+			break
+		mesg = openTCPClient("get " + name, targIP, int(targPort), name)
+		print mesg
 
 
 #Send stop message to threads	
-# thread1.done=True
+thread1.done=True
 thread2.done=True
 
-udpPort = 42000
 # #if blocking in thread1 and thread2, you can send "pings" from here to both those ports to force them out of blocking and check the loop condition
-# runTCPClient("quit",tcpPort)
-runUDPClient("quit",udpPort)
-
+runTCPClient("qui",int(tcpPort))
+runUDPClient("qui",int(udpPort))
 print "Waiting for all threads to complete"
-# thread1.join()
+thread1.join()
 thread2.join()
 
 print "Exiting Main Thread"
